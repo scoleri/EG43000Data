@@ -1,2 +1,2 @@
-config.env
-auth.json
+**/config.env
+**/auth.json
