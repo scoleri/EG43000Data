@@ -26,8 +26,8 @@ SIGNATURE=$(echo -n "$SIGNATURE_STRING" | openssl sha1 | awk '{print $2}')
 # Construct base URL
 BASE_URL="https://api.dessmonitor.com/public/?sign=${SIGNATURE}&salt=${DESS_SALT}&action=${DESS_ACTION}&usr=${DESS_USER}&source=1&company-key=${DESS_COMPANY_KEY}"
 
-echo $BASE_URL
-curl -X GET "$BASE_URL" -H "Accept: application/json" | jq > auth.json
+#echo $BASE_URL
+curl -s -X GET "$BASE_URL" -H "Accept: application/json" | jq > auth.json
 
 # Query latest device data
 i=0
@@ -35,12 +35,14 @@ ACTION="&action=queryDeviceLastData&source=1&page=$i&pagesize=100&i18n=en_US&pn=
 TOKEN=$(cat auth.json | jq -r '.dat.token')
 SECRET=$(cat auth.json | jq -r '.dat.secret')
 
-echo "TOKEN: $TOKEN"
-echo "SECRET: $SECRET"
+#echo "TOKEN: $TOKEN"
+#echo "SECRET: $SECRET"
 
 SIGNATURE_STRING="${DESS_SALT}${SECRET}${TOKEN}${ACTION}"
 SIGNATURE_SHA=$(echo -n "$SIGNATURE_STRING" | openssl sha1 | awk '{print $2}')
 
 QUERY="http://api.dessmonitor.com/public/?sign=${SIGNATURE_SHA}&salt=${DESS_SALT}&token=${TOKEN}&action=queryDeviceLastData&source=1&page=$i&pagesize=100&i18n=en_US&pn=${DEVICE_PN}&devcode=${DEVICE_CODE}&devaddr=${DEVICE_ADDR}&sn=${DEVICE_SN}"
 
-curl -X GET "$QUERY" -H "Accept: application/json" | jq >> "$LOGDATE-now.json"
+curl -s -X GET "$QUERY" -H "Accept: application/json" | jq > "$LOGDATE-now.json"
+
+cat "$LOGDATE-now.json" |jq -r '.dat[]|.title + ": " + .val + " " + .unit'
